@@ -17,6 +17,7 @@ class BetaDecay{
 		std::vector<double> Energy;
 		std::vector<double> Kurie;
 		std::vector<double> Fermi;
+		std::vector<double> SF;
 	
 		const double LowerBound = 10.0;	
 		const double ElectronMass = 510.998950;

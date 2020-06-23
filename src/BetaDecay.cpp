@@ -31,6 +31,7 @@ BetaDecay::BetaDecay(std::string output,std::string decay,double end,double z,in
 	this->Energy = std::vector<double>(num,0.0);
 	this->Kurie = std::vector<double>(num,0.0);
 	this->Fermi = std::vector<double>(num,0.0);
+	this->SF = std::vector<double>(num,0.0);
 
 	this->CalculateSpectrum();
 	this->WriteData();
@@ -41,10 +42,12 @@ void BetaDecay::WriteData(){
 		TFile* rootfile = new TFile(this->OutputFile.c_str(),"RECREATE");
 		TH1F* energyspectrum = new TH1F("RawBetaSpectrum","RawBetaSpectrum",this->NumBins,this->LowerBound,this->EndPointEnergy);
 		TH1F* kuriespectrum = new TH1F("KurieBetaSpectrum","KurieBetaSpectrum",this->NumBins,this->LowerBound,this->EndPointEnergy);
+		TH1F* uncorrectedkuriespectrum = new TH1F("UncorrectedKurieBetaSpectrum","UncorrectedKurieBetaSpectrum",this->NumBins,this->LowerBound,this->EndPointEnergy);
 	
 		for( size_t ii = 0; ii < this->NumBins; ++ii ){
 			energyspectrum->Fill(this->Energy.at(ii),this->Counts.at(ii));
 			kuriespectrum->Fill(this->Energy.at(ii),this->Kurie.at(ii));
+			uncorrectedkuriespectrum->Fill(this->Energy.at(ii),this->Kurie.at(ii) * std::sqrt( this->Fermi.at(ii) * this->SF.at(ii) ) );
 		}
 		
 		rootfile->Write();
@@ -112,6 +115,7 @@ void BetaDecay::ApplyShapeFactor(){
 		for( size_t ii = 0; ii < this->NumBins; ++ii ){
 			psquared = (this->Energy.at(ii) * this->Energy.at(ii)) - 1.0;
 			qsquared = (this->EndPointEnergy - this->Energy.at(ii))*(this->EndPointEnergy - this->Energy.at(ii));
+			this->SF.at(ii) = psquared + qsquared;
 			this->Counts.at(ii) *= (psquared + qsquared);
 		}
 
@@ -120,6 +124,7 @@ void BetaDecay::ApplyShapeFactor(){
 		for( size_t ii = 0; ii < this->NumBins; ++ii ){
 			psquared = (this->Energy.at(ii) * this->Energy.at(ii)) - 1.0;
 			qsquared = (this->EndPointEnergy - this->Energy.at(ii))*(this->EndPointEnergy - this->Energy.at(ii));
+			this->SF.at(ii) = (psquared*psquared + qsquared*qsquared + (10.0/3.0)*psquared*qsquared);
 			this->Counts.at(ii) *= (psquared*psquared + qsquared*qsquared + (10.0/3.0)*psquared*qsquared);
 		}
 
@@ -128,6 +133,7 @@ void BetaDecay::ApplyShapeFactor(){
 		for( size_t ii = 0; ii < this->NumBins; ++ii ){
 			psquared = (this->Energy.at(ii) * this->Energy.at(ii)) - 1.0;
 			qsquared = (this->EndPointEnergy - this->Energy.at(ii))*(this->EndPointEnergy - this->Energy.at(ii));
+			this->SF.at(ii) = (psquared*psquared*psquared + 7.0*psquared*psquared*qsquared + 7.0*qsquared*qsquared*psquared + qsquared*qsquared*qsquared);
 			this->Counts.at(ii) *= (psquared*psquared*psquared + 7.0*psquared*psquared*qsquared + 7.0*qsquared*qsquared*psquared + qsquared*qsquared*qsquared);
 		}
 
@@ -142,8 +148,10 @@ void BetaDecay::ApplyShapeFactor(){
 		std::cin >> b;
 		std::cout << "Enter c:";
 		std::cin >> c;
-		for( size_t ii = 0; ii < this->NumBins; ++ii )
+		for( size_t ii = 0; ii < this->NumBins; ++ii ){
+			this->SF.at(ii) = ( 1.0 + a*this->Energy.at(ii) + b/this->Energy.at(ii) + c*this->Energy.at(ii)*this->Energy.at(ii) );
 			this->Counts.at(ii) *= ( 1.0 + a*this->Energy.at(ii) + b/this->Energy.at(ii) + c*this->Energy.at(ii)*this->Energy.at(ii) );
+		}
 
 	}else{
 		std::cout << "Transition type : " << this->DecayType << " is not programmed yet, exiting now\n";
