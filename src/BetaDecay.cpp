@@ -43,7 +43,7 @@ void BetaDecay::WriteData(){
 		TH1F* kuriespectrum = new TH1F("KurieBetaSpectrum","KurieBetaSpectrum",this->NumBins,this->LowerBound,this->EndPointEnergy);
 	
 		for( size_t ii = 0; ii < this->NumBins; ++ii ){
-			energyspectrum->Fill(this->Energy.at(ii),this->Counts.at(ii) * this->Fermi.at(ii) );
+			energyspectrum->Fill(this->Energy.at(ii),this->Counts.at(ii));
 			kuriespectrum->Fill(this->Energy.at(ii),this->Kurie.at(ii));
 		}
 		
@@ -53,7 +53,7 @@ void BetaDecay::WriteData(){
 		std::ofstream out;
 		out.open(this->OutputFile.c_str());
 		for( size_t ii = 0; ii < this->NumBins; ++ii )
-			out << this->Energy.at(ii) << '\t' << this->Counts.at(ii)*this->Fermi.at(ii) << '\t' << this->Kurie.at(ii) << '\n';
+			out << this->Energy.at(ii) << '\t' << this->Counts.at(ii) << '\t' << this->Kurie.at(ii) << '\n';
 		out.close();
 
 	}
@@ -81,8 +81,8 @@ void BetaDecay::CalculateSpectrum(){
 
 		beta = std::sqrt( 1.0 - ( 1.0 / ( 1.0 + ( momentum*momentum ) ) ) );
 		eta = (M_PI * 2.0 * this->FineStructure * this->Charge) / ( beta );
-		this->Counts.at(ii) = currcount;
 		this->Fermi.at(ii) = ( eta )/( 1.0 - std::exp(-eta) );
+		this->Counts.at(ii) = currcount*this->Fermi.at(ii);
 		
 		currcount = this->Energy.at(ii);
 		currcount *= ( (this->EndPointEnergy - this->Energy.at(ii)) * (this->EndPointEnergy - this->Energy.at(ii)) );
@@ -92,7 +92,8 @@ void BetaDecay::CalculateSpectrum(){
 	this->ApplyShapeFactor();
 
 	//NORMALIZE BOTH FERMI CORRECTED AND UNCORRECTED
-	double area = std::accumulate(this->Counts.begin(),this->Counts.end(),0.0)/static_cast<double>(this->NumBins);
+	double area = std::accumulate(this->Counts.begin(),this->Counts.end(),0.0);
+
 	for( size_t ii = 0; ii < this->NumBins; ++ii )
 		this->Counts.at(ii) /= area;
 
