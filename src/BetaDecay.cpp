@@ -7,6 +7,7 @@ by: Thomas Ruland
 #include <unistd.h>
 #include <algorithm>
 #include <cctype>
+#include <numeric>
 
 #include <TFile.h>
 #include <TH1F.h>

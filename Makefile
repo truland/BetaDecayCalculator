@@ -1,4 +1,3 @@
-
 #TESTING HOW TO MERGE BRANCHES
 #making sure nothing broke
 
@@ -24,9 +23,9 @@ DESTDIR	:= /usr/local/bin/
 #REGULAR OPTIONS
 CXX		:= g++
 OPTIMIZE	:= -O2
-WARNINGS	:=
+WARNINGS	:= -Wall -Wpedantic -Wextra
 CPPSTD		:= -std=c++17
-CXXFLAGS	+= -fopenmp $(WARNINGS) $(CPPSTD) $(OPTIMIZE) -I$(INCLUDE)
+CXXFLAGS	+= $(WARNINGS) $(CPPSTD) $(OPTIMIZE) -I$(INCLUDE)
 
 #ROOT CAPABILITY
 ROOTCONFIG	:= root-config
@@ -37,23 +36,23 @@ LDLIBS		:= $(shell $(ROOTCONFIG) --libs)
 #GENERIC BUILD
 SRCS	= $(wildcard $(SRC)/*.cpp)
 OBJS	= $(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(SRCS))
-MPUX	= $(BIN)/BSCalculator
+CPA	= $(BIN)/BSCalculator
 
 .PHONY: all clean install
 
-all:	$(MPUX)
+all:	$(CPA)
 
-$(MPUX):	$(OBJS) | $(BIN) Makefile
+$(CPA): 	$(OBJS) | $(BIN) Makefile
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
-$(OBJ)/%.o:	$(SRC)/%.cpp | $(OBJ)
+$(OBJ)/%.o:	$(SRC)/%.cpp | $(OBJ) $(INCLUDE)/%.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BIN) $(OBJ):
 	$(MKDIR) $@
 
-install: $(MPUX)
-	sudo install $(MPUX) $(DESTDIR)
+install: $(CPA)
+	sudo install $(CPA) $(DESTDIR)
 
 clean:
 	$(RMDIR) $(OBJ) $(BIN)
